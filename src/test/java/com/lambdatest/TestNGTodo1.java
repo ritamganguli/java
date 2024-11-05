@@ -1,123 +1,128 @@
-package com.lambdatest;
-
-import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.HashMap;
-
-import org.openqa.selenium.By;
-import org.openqa.selenium.Capabilities;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.edge.EdgeOptions;
-import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.*;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
-import org.testng.ITestContext;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import com.relevantcodes.extentreports.ExtentReports;
+import com.relevantcodes.extentreports.ExtentTest;
+import com.relevantcodes.extentreports.LogStatus;
 
-public class TestNGTodo1 {
+public class Test1 {
+    RemoteWebDriver driver = null;
+    public static String status = "passed";
+    public static String username = "shubhamr";
+    public static String access_key = "xyz";
 
-    private RemoteWebDriver driver;
-    private String Status = "failed";
+    String testURL = "https://lambdatest.github.io/sample-todo-app/";
+    String testURLTitle = "Sample page - lambdatest.com";
 
     @BeforeMethod
-    public void setup(Method m, ITestContext ctx) throws MalformedURLException {
-        String username = System.getenv("LT_USERNAME") == null ? "Your LT Username" : System.getenv("LT_USERNAME");
-        String authkey = System.getenv("LT_ACCESS_KEY") == null ? "Your LT AccessKey" : System.getenv("LT_ACCESS_KEY");
-        String hub = "@hub.lambdatest.com/wd/hub";
+    @Parameters(value = {"browser", "version", "platform", "resolution"})
+    public void testSetUp(String browser, String version, String platform, String resolution) throws Exception {
+        String platformName = System.getenv("HYPEREXECUTE_PLATFORM") != null ? System.getenv("HYPEREXECUTE_PLATFORM") : platform;
+        
+        DesiredCapabilities capabilities = new DesiredCapabilities();
+        capabilities.setCapability("build", "[HyperExecute - 1] Demonstration of the TestNG Framework");
+        capabilities.setCapability("name", "[HyperExecute - 1] Demonstration of the TestNG Framework");
+        capabilities.setCapability("platform", platformName);
+        capabilities.setCapability("browserName", browser);
+        capabilities.setCapability("version", version);
+        capabilities.setCapability("tunnel", false);
+        capabilities.setCapability("network", true);
+        capabilities.setCapability("console", true);
+        capabilities.setCapability("visual", true);
 
-        Object browserOptions = null;
-        // Chrome
-        if (m.getName().contains("Chrome")) {
-            ChromeOptions options = new ChromeOptions();
-            options.setPlatformName("Windows 10");
-            options.setBrowserVersion("latest");
-            HashMap<String, Object> ltOptions = new HashMap<String, Object>();
-//            ltOptions.put("dedicatedProxy",true);
-            ltOptions.put("project", "Untitled");
-            ltOptions.put("geoLocation", "IN");
-            options.setCapability("LT:Options", ltOptions);
-            browserOptions = options;
+        try {
+            driver = new RemoteWebDriver(new URL("https://" + username + ":" + access_key + "@hub.lambdatest.com/wd/hub"), capabilities);
+        } catch (MalformedURLException e) {
+            System.out.println("Invalid grid URL");
         }
-        // Edge
-        else if (m.getName().contains("Edge")) {
-            EdgeOptions options = new EdgeOptions();
-            options.setPlatformName("Windows 10");
-            options.setBrowserVersion("latest");
-            HashMap<String, Object> ltOptions = new HashMap<String, Object>();
-//            ltOptions.put("dedicatedProxy",true);
-            ltOptions.put("geoLocation","IN");
-            ltOptions.put("project", "Untitled");
-            options.setCapability("LT:Options", ltOptions);
-            browserOptions = options;
-        }
-        // Firefox
-        else if (m.getName().contains("Firefox")) {
-            FirefoxOptions options = new FirefoxOptions();
-            options.setPlatformName("Windows 10");
-            options.setBrowserVersion("latest");
-            HashMap<String, Object> ltOptions = new HashMap<String, Object>();
-//            ltOptions.put("dedicatedProxy",true);
-            ltOptions.put("geoLocation", "IN");
-            ltOptions.put("project", "Untitled");
-            options.setCapability("LT:Options", ltOptions);
-            browserOptions = options;
-        }
+        System.out.println("Started session");
+        String sessionId = driver.getSessionId().toString();
 
-        driver = new RemoteWebDriver(new URL("https://" + "shubhamr" + ":" + "dl8Y8as59i1YyGZZUeLF897aCFvIDmaKkUU1e6RgBmlgMLIIhh" + hub), (Capabilities) browserOptions);
+        // Generate and print MD5 hash of has_key
+        String hasKey = username + ":" + access_key;
+        String md5Hash = generateMD5Hash(hasKey);
+        System.out.println("MD5 hash of has_key: " + md5Hash);
+        System.out.println("https://automation.lambdatest.com/public/video?testID=" + sessionId + "&auth=" + md5Hash);
     }
 
-    @Test
-    public void testChrome() throws InterruptedException {
-        String spanText;
-        System.out.println("Loading Url");
+    @Test(description = "To Do App on React App")
+    public void test1_element_addition_1() throws InterruptedException {
+        ExtentReports extent = new ExtentReports("target/surefire-reports/html/extentReport.html");
+        ExtentTest test1 = extent.startTest("demo application test 1-1", "To Do App test 1");
 
-        driver.get("https://www.merckgroup.com/en/careers/job-search.html?");
+        driver.get(testURL);
+        Thread.sleep(5000);
 
-        System.out.println("Clicking on accept all cookies");
-        driver.findElement(By.xpath("//button[@aria-label='accept cookies']")).click();
-        Thread.sleep(10000);
-        driver.findElement(By.xpath("//div[@class='se-list-job-item-title']/a")).click();
-        Thread.sleep(10000);
-        Status="passed";
-    }
+        test1.log(LogStatus.PASS, "URL is opened");
+        WebDriverWait wait = new WebDriverWait(driver, 5);
+        test1.log(LogStatus.PASS, "Wait created");
 
-    @Test
-    public void testEdge() throws InterruptedException {
-        System.out.println("Loading Url");
+        By textField = By.id("sampletodotext");
+        WebElement addText = driver.findElement(textField);
+        int item_count = 5;
 
-        driver.get("https://www.merckgroup.com/en/careers/job-search.html?");
+        for (int i = 1; i <= item_count; i++) {
+            addText.click();
+            addText.sendKeys("Adding a new item " + i + Keys.ENTER);
+            test1.log(LogStatus.PASS, "New item No. " + i + " is added");
+            Thread.sleep(2000);
+        }
 
-        System.out.println("Clicking on accept all cookies");
-        driver.findElement(By.xpath("//button[@aria-label='accept cookies']")).click();
+        int totalCount = item_count + 5;
+        int remaining = totalCount - 1;
 
-        Thread.sleep(10000);
-        driver.findElement(By.xpath("//div[@class='se-list-job-item-title']/a")).click();
-        Thread.sleep(10000);
-        Status="passed";
-    }
+        for (int i = 1; i <= totalCount; i++, remaining--) {
+            String xpath = "(//input[@type='checkbox'])[" + i + "]";
+            driver.findElement(By.xpath(xpath)).click();
+            Thread.sleep(500);
+            test1.log(LogStatus.PASS, "Item No. " + i + " marked completed");
 
-    @Test
-    public void testFirefox() throws InterruptedException {
-        System.out.println("Loading Url");
+            By remainingItem = By.className("ng-binding");
+            String actualText = driver.findElement(remainingItem).getText();
+            String expectedText = remaining + " of " + totalCount + " remaining";
 
-        driver.get("https://www.merckgroup.com/en/careers/job-search.html?");
+            if (!expectedText.equals(actualText)) {
+                test1.log(LogStatus.FAIL, "Wrong Text Description");
+                status = "failed";
+            }
+            Thread.sleep(500);
 
-        System.out.println("Clicking on accept all cookies");
-        driver.findElement(By.xpath("//button[@aria-label='accept cookies']")).click();
+            test1.log(LogStatus.PASS, "Item No. " + i + " completed");
+        }
 
-        Thread.sleep(10000);
-        driver.findElement(By.xpath("//div[@class='se-list-job-item-title']/a")).click();
-        Thread.sleep(10000);
-        Status="passed";
+        extent.endTest(test1);
+        extent.flush();
     }
 
     @AfterMethod
     public void tearDown() {
-        driver.executeScript("lambda-status=" + Status);
-        driver.quit();
+        if (driver != null) {
+            ((JavascriptExecutor) driver).executeScript("lambda-status=" + status);
+            driver.quit();
+        }
+    }
+
+    public static String generateMD5Hash(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(input.getBytes());
+            byte[] digest = md.digest();
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            System.out.println("MD5 algorithm not found");
+            return null;
+        }
     }
 }
